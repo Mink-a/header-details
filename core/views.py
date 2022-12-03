@@ -12,7 +12,7 @@ def index(request):
 
 def person_profile(request):
   person_form = PersonForm()
-  RelationshipFormSet = formset_factory(RelationshipForm, extra=1)
+  RelationshipFormSet = formset_factory(RelationshipForm, extra=3)
   formset = RelationshipFormSet()
 
   if request.method == 'POST':
