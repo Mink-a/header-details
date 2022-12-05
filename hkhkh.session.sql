@@ -1,1 +1,0 @@
-DELETE FROM core_relationship WHERE person_id=4;

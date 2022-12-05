@@ -1,6 +1,6 @@
 from django.forms import formset_factory
 from django.http import HttpResponse
-from django.shortcuts import render
+from django.shortcuts import redirect, render
 
 from core.forms import PersonForm,RelationshipForm
 from core.models import Person, Relationship
@@ -20,7 +20,9 @@ def person_profile(request):
     if person_form.is_valid():
       person = Person.objects.create(
         first_name=person_form.cleaned_data['first_name'],
-        last_name=person_form.cleaned_data['last_name']
+        last_name=person_form.cleaned_data['last_name'],
+        father_name=person_form.cleaned_data['father_name'],
+        age=person_form.cleaned_data['age'],
       )
 
       formset = RelationshipFormSet(request.POST)
@@ -30,17 +32,19 @@ def person_profile(request):
             member=Relationship.objects.create(
               name=form.cleaned_data['name'],
               relationship=form.cleaned_data['relationship'],
-              person=person
+              person=person,
+              age=form.cleaned_data['age']
             )
+          return redirect('home')
       
   else:
     person_form = PersonForm()
     formset = RelationshipFormSet()
 
-  return render(request, 'profile.html', context={
-    'formset':formset,
-    'form':person_form
-  })
+    return render(request, 'profile.html', context={
+      'formset':formset,
+      'form':person_form
+    })
 
 def person_profile_update(request, person_id):
   person = Person.objects.get(pk=person_id)
@@ -53,6 +57,8 @@ def person_profile_update(request, person_id):
     if person_form.is_valid():
       person.first_name=person_form.cleaned_data['first_name']
       person.last_name=person_form.cleaned_data['last_name']
+      person.father_name=person_form.cleaned_data['father_name']
+      person.age=person_form.cleaned_data['age']
       person.save()
 
       formset = RelationshipFormSet(request.POST)
@@ -69,6 +75,7 @@ def person_profile_update(request, person_id):
             member = Relationship.objects.get(pk=form.cleaned_data['member_id'])
             member.name = form.cleaned_data['name']
             member.relationship = form.cleaned_data['relationship']
+            member.age = form.cleaned_data['age']
             member.save()
           else:
             # Add new
@@ -76,6 +83,7 @@ def person_profile_update(request, person_id):
               member=Relationship.objects.create(
                 name=form.cleaned_data['name'],
                 relationship=form.cleaned_data['relationship'],
+                age=form.cleaned_data['age'],
                 person=person
               )
       
@@ -83,6 +91,8 @@ def person_profile_update(request, person_id):
   person_form = PersonForm(initial={
     'first_name':person.first_name,
     'last_name':person.last_name,
+    'father_name':person.father_name,
+    'age':person.age
   })
 
   members = Relationship.objects.filter(person_id=person.id)
@@ -91,6 +101,7 @@ def person_profile_update(request, person_id):
     mem_dict = {
       'member_id':member.id,
       'name':member.name,
+      'age': member.age,
       'relationship':member.relationship,
     }
     data.append(mem_dict)
